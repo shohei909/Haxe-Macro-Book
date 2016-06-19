@@ -287,10 +287,10 @@ class IncludeMacro {
         Compiler.include("lib", true);
     }
 }</screen>
-<simpara><literal>lib/IncludeTest.hx</literal></simpara>
+<simpara><literal>lib/IncludeSample.hx</literal></simpara>
 <screen>package lib;
 
-class IncludeTest {
+class IncludeSample {
     public function new() {
         trace(Math.random());
     }
@@ -299,39 +299,39 @@ class IncludeTest {
 <screen>haxe -js lib.js --macro IncludeMacro.initialize()</screen>
 <simpara>すると、以下のJavaScriptが生成されます。</simpara>
 <programlisting language="javascript" linenumbering="unnumbered">(function (console) { "use strict";
-var lib_IncludeTest = function() {
+var lib_IncludeSample = function() {
     console.log(Math.random());
 };
 })(typeof console !== "undefined" ? console : {log:function(){}});</programlisting>
-<simpara>メインクラスを指定しなくてもコンパイルが成功しており、lib.IncludeTestクラスが出力結果に含まれているのが分かります。</simpara>
+<simpara>メインクラスを指定しなくてもコンパイルが成功しており、lib.IncludeSampleクラスが出力結果に含まれているのが分かります。</simpara>
 <simpara>このようなコンパイル対象の指定方法はHaxeでJavaScriptのライブラリを作成したい場合に便利です。Haxeはmain関数から到達できないコードを出力コードから省くデッドコード削除機能を備えていますが、上記のような指定を行った場合パッケージ全体を出力に含めた上でそこから使用されていないコードを削除してくれます。</simpara>
 <section xml:id="_tips_expose">
 <title>Tips: @:expose</title>
 <simpara>HaxeからJavaScriptに出力したクラスや関数は、デフォルトではJavaScriptからのアクセスができません。JavaScriptからアクセスしたいクラスや関数には以下のように<literal>@:expose</literal>のタグを付けてください。</simpara>
 <programlisting language="haxe" linenumbering="unnumbered">@:expose
-class IncludeTest {</programlisting>
-<simpara>こうするとJavaScritpから、<literal>new lib.IncludeTest()</literal>や<literal>IncludeTest</literal>のフィールドが呼び出せるようになります。</simpara>
+class IncludeSample {</programlisting>
+<simpara>こうするとJavaScritpから、<literal>new lib.IncludeSample()</literal>や<literal>IncludeSample</literal>のフィールドが呼び出せるようになります。</simpara>
 </section>
 <section xml:id="_tips_ファイル単体でのinclude">
 <title>Tips: ファイル単体でのinclude</title>
 <simpara>パッケージまるごとでは無くファイル1つ1つをincludeしたい場合、単純にコマンドライン上でそのファイルのパスを指定します宇</simpara>
-<screen>haxe lib.IncludeTest lib.IncludeTest2</screen>
+<screen>haxe lib.IncludeSample lib.IncludeSample2</screen>
 </section>
 </section>
 <section xml:id="_exclude">
 <title>exclude</title>
 <simpara>JavaScriptターゲットで外部ライブラリを使いたい場合は、JavaScriptで直接書かれたライブラリを使うかHaxeで書かれたライブラリをそのまま使うことが多いですが、まれにHaxeからJavaScriptに出力したコードをまたHaxeから使いたいということがあります。</simpara>
 <simpara>例えば、ライブラリ本体とそれに対するプラグインの両方をHaxeで書きたいという場合です。この場合、本体のコードに依存しているプラグインを単純にコンパイルすると、本体側のコードがプラグインに含まれてしまいます。</simpara>
-<simpara>このような場合に、初期化マクロで<literal>exclude</literal>を行うと本体側のコードを出力から削除できます。以下は、先ほどの<literal>lib.IncludeTest</literal>に依存するようなコードで<literal>exclude</literal>を行っているサンプルです。</simpara>
-<programlisting language="haxe" linenumbering="unnumbered">import lib.IncludeTest;
+<simpara>このような場合に、初期化マクロで<literal>exclude</literal>を行うと本体側のコードを出力から削除できます。以下は、先ほどの<literal>lib.IncludeSample</literal>に依存するようなコードで<literal>exclude</literal>を行っているサンプルです。</simpara>
+<programlisting language="haxe" linenumbering="unnumbered">import lib.IncludeSample;
 
 #if macro
 import haxe.macro.Compiler;
 #end
 
-class ExcludeTest {
+class ExcludeSample {
     public function new() {
-        new IncludeTest();
+        new IncludeSample();
     }
 
     #if macro
@@ -342,15 +342,15 @@ class ExcludeTest {
     #end
 }</programlisting>
 <simpara>これをコンパイルします。</simpara>
-<programlisting language="sh" linenumbering="unnumbered">haxe ExcludeTest -js exclude_test.js --macro ExcludeTest.initialize()</programlisting>
+<programlisting language="sh" linenumbering="unnumbered">haxe ExcludeSample -js exclude_test.js --macro ExcludeSample.initialize()</programlisting>
 <simpara>すると、以下が出力されます。</simpara>
 <programlisting language="javascript" linenumbering="unnumbered">(function (console) { "use strict";
-var ExcludeTest = function() { };
-ExcludeTest.main = function() {
-    new lib.IncludeTest();
+var ExcludeSample = function() { };
+ExcludeSample.main = function() {
+    new lib.IncludeSample();
 };
 })(typeof console !== "undefined" ? console : {log:function(){}});</programlisting>
-<simpara>確かに、<literal>lib.IncludeTest</literal>の呼び出しを行っていますが、<literal>lib.IncludeTest</literal>自体の実装は含まないようなコードが生成できました。</simpara>
+<simpara>確かに、<literal>lib.IncludeSample</literal>の呼び出しを行っていますが、<literal>lib.IncludeSample</literal>自体の実装は含まないようなコードが生成できました。</simpara>
 <section xml:id="_tips_gen_hx_classes">
 <title>Tips: --gen-hx-classes</title>
 <simpara>この本体とプラグインの関係を実現できる機能としては、<literal>--gen-hx-classes</literal>もあります。<literal>--gen-hx-classes</literal>のオプションをつけてHaxeのコンパイラを実行すると、ソースコードからその<literal>extern</literal>を生成することができます。</simpara>
@@ -359,9 +359,9 @@ ExcludeTest.main = function() {
 <section xml:id="_tips_初期化マクロとhaxe_macro_compiler">
 <title>Tips: 初期化マクロとhaxe.macro.Compiler</title>
 <simpara>初期化マクロで指定する関数は自作の関数でなくても、標準ライブラリの関数を直接指定することが可能です。つまり、<literal>exclude</literal>の例は以下のコマンドでも同じ結果になります。</simpara>
-<screen>haxe ExcludeTest -js exclude_test.js --macro haxe.macro.Compiler.exclude('lib')</screen>
+<screen>haxe ExcludeSample -js exclude_test.js --macro haxe.macro.Compiler.exclude('lib')</screen>
 <simpara>さらに、<literal>haxe.macro.Compiler</literal>クラスの関数を使う場合クラス名が省略可能です。</simpara>
-<screen>haxe ExcludeTest -js exclude_test.js --macro exclude('lib')</screen>
+<screen>haxe ExcludeSample -js exclude_test.js --macro exclude('lib')</screen>
 </section>
 </section>
 </chapter>
@@ -384,7 +384,7 @@ class ExprMacro {
 }</screen>
 <simpara>普通の関数定義のようですが、<literal>macro</literal>の修飾子がこの関数が式マクロであることを表しています。引数と戻り値に使われている<literal>haxe.macro.Expr</literal>は、Haxeの抽象構文木(AST)を表す構造体です。要素の種類を表すenumと、その要素がコードのどの位置から来たかの情報で構成されます。このマクロではもらった式を2度繰り返すブロック式を生成して返しています。<literal>Context.currentPos()</literal>はこの関数の呼び出し箇所の位置情報で、生成したブロック式の位置情報としてこれを割り当てています。</simpara>
 <simpara>このマクロを実際につかってみます。</simpara>
-<programlisting language="haxe" linenumbering="unnumbered">class ExprMacroTest {
+<programlisting language="haxe" linenumbering="unnumbered">class ExprMacroSample {
     static function main() {
         var i = 0;
         ExprMacro.twice(i += 4);
@@ -543,13 +543,12 @@ class ExprMacro {
 <simpara>以下のようにstaticでない式マクロを定義することもできます。</simpara>
 <screen>import haxe.macro.Expr;
 
-class NonStaticTest
-{
+class NonStaticSample {
 	public function new() {}
 
 	#if !macro
 	public static function main() {
-		var array = new NonStaticTest().test();
+		var array = new NonStaticSample().test();
 	}
 	#end
 
@@ -557,7 +556,7 @@ class NonStaticTest
 		return macro [$self, $self];
 	}
 }</screen>
-<simpara>この場合、上記の例のように、staticでない式マクロを定義されている引数より1つ少なくして呼び出します。こうすると、<literal>.test()</literal>の左側の式が第一引数として受け取られます。つまり、<literal>new NonStaticTest().test()</literal>は、<literal>[new NonStaticTest(), new NonStaticTest()]</literal>に変換されています。</simpara>
+<simpara>この場合、上記の例のように、staticでない式マクロを定義されている引数より1つ少なくして呼び出します。こうすると、<literal>.test()</literal>の左側の式が第一引数として受け取られます。つまり、<literal>new NonStaticSample().test()</literal>は、<literal>[new NonStaticSample(), new NonStaticSample()]</literal>に変換されています。</simpara>
 </section>
 </section>
 <section xml:id="_ローカル変数のデバッグトレース">
@@ -588,7 +587,7 @@ class DebugMacro {
 	}
 }</screen>
 <simpara>そして、この<literal>debug</literal>関数を次のように呼び出してみます。</simpara>
-<screen>class DebugMacroTest {
+<screen>class DebugMacroSample {
 	public static function main() {
 		test(100);
 	}
@@ -599,7 +598,7 @@ class DebugMacro {
 	}
 }</screen>
 <simpara>結果は、次の通りです</simpara>
-<screen>DebugMacroTest.hx:20: Called from test
+<screen>DebugMacroSample.hx:20: Called from test
 fuga : ok
 hoge : 100
 --------</screen>
@@ -657,9 +656,9 @@ class BuildMacro {
 <screen>@:build(BuildMacro.addFileNames("./assets"))
 class Constants {}</screen>
 <simpara>これにより、コンパイル時のワーキングディレクトリから<literal>./assets</literal>の位置にあるディレクトリを探索して、その直下にあるファイル名の定数が<literal>Constants</literal>の<literal>static</literal>フィールドとして生成されます。これは次のように利用できます。</simpara>
-<screen>class ConstantsTest {
+<screen>class ConstantsSample {
 	public static function main() {
-		trace(Constants.SAMPLE_TXT); // ConstantsTest.hx:3: sample.txt
+		trace(Constants.SAMPLE_TXT); // ConstantsSample.hx:3: sample.txt
 	}
 }</screen>
 <simpara>これは、単純に<literal>"sample.txt"</literal>を文字列リテラルで使うのよりも手間がかかっているように見えるかもしれませんが、定数化には2つのメリットがあります。</simpara>

@@ -577,8 +577,7 @@ HaxeのマニュアルやGithubなどで見つけられるほとんどの式マ�
 ```
 import haxe.macro.Expr;
 
-class NonStaticSample
-{
+class NonStaticSample {
 	public function new() {}
 	
 	#if !macro
