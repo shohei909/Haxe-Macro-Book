@@ -1,0 +1,37 @@
+footer:
+  font_size: $base_font_size_small
+  font_color: $base_font_color
+  border_width: 0
+  height: 25mm
+  padding: [3mm,0,0,0]
+  valign: top
+  recto_content:
+    left: '{page-number}'
+  verso_content:
+    right: '{page-number}'
+font:
+  catalog:
+    genshin_gothic:
+      normal: GenShinGothic-ExtraLight.ttf
+      bold: GenShinGothic-Bold.ttf
+    genshin_gothic_mono:
+      normal: GenShinGothic-Monospace-ExtraLight.ttf
+      bold: GenShinGothic-Monospace-Bold.ttf
+  fallbacks:
+    - genshin_gothic
+page:
+  background_color: ffffff
+  layout: portrait
+  margin: [20mm, 20mm, 20mm, 20mm]
+  size: A4
+  
+base:
+  font_color: 000000
+  font_family: genshin_gothic
+  font_size: 10pt
+
+code:
+  font_color: 000000
+  font_family: genshin_gothic_mono
+  font_size: 9pt
+  border_radius: 2

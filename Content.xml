@@ -1,0 +1,903 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?asciidoc-toc maxdepth="4"?>
+<?asciidoc-numbered?>
+<book xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="ja">
+<info>
+<title>Haxe 実践マクロ</title>
+<date>2016-06-20</date>
+</info>
+<chapter xml:id="_はじめに">
+<title>はじめに</title>
+<section xml:id="_haxeとは">
+<title>Haxeとは</title>
+<simpara>Haxeは静的型付けのプログラミング言語です。特徴的なのはその出力ターゲットの豊富さで、以下の3種類のバイトコードと8種類ソースコードへコンパイルすることが可能です。</simpara>
+<itemizedlist>
+<listitem>
+<simpara>バイトコード</simpara>
+<itemizedlist>
+<listitem>
+<simpara>Flash</simpara>
+</listitem>
+<listitem>
+<simpara>Neko（Haxe Foundationが開発しているVM用）</simpara>
+</listitem>
+<listitem>
+<simpara>hl（Haxe Foundationが開発している中間言語）</simpara>
+</listitem>
+</itemizedlist>
+</listitem>
+<listitem>
+<simpara>ソースコード</simpara>
+<itemizedlist>
+<listitem>
+<simpara>JavaScript</simpara>
+</listitem>
+<listitem>
+<simpara>ActionScript3</simpara>
+</listitem>
+<listitem>
+<simpara>C#</simpara>
+</listitem>
+<listitem>
+<simpara>Java</simpara>
+</listitem>
+<listitem>
+<simpara>Python</simpara>
+</listitem>
+<listitem>
+<simpara>C++</simpara>
+</listitem>
+<listitem>
+<simpara>PHP</simpara>
+</listitem>
+<listitem>
+<simpara>Lua</simpara>
+</listitem>
+</itemizedlist>
+</listitem>
+</itemizedlist>
+<simpara>標準ライブラリはすべての出力ターゲット(または複数のターゲット)で利用可能なパッケージと、それぞれの出力ターゲット側の標準ライブラリの両方が提供されています。このためHaxeではクロスプラットフォームで動作するようなプログラムと、特定のターゲットに強く依存するようなプログラムの両方を書くことができます。</simpara>
+<simpara>HaxeはもともとはActionScriptの代替として開発されていたもので、文法もActionScript3によく似ています。ただ、ActionScript3に似ているというだけではなく、以下のようなActionScript3には無い機能を多く備えています。</simpara>
+<itemizedlist>
+<listitem>
+<simpara>型推論</simpara>
+</listitem>
+<listitem>
+<simpara>型パラメータ（ジェネリクス）</simpara>
+</listitem>
+<listitem>
+<simpara>enum（一般化代数データ型、GADT）</simpara>
+</listitem>
+<listitem>
+<simpara>パターンマッチング</simpara>
+</listitem>
+<listitem>
+<simpara>typedef（型エイリアス）</simpara>
+</listitem>
+<listitem>
+<simpara>構造的部分型付け</simpara>
+</listitem>
+<listitem>
+<simpara>配列内包表記、マップ内包表記</simpara>
+</listitem>
+<listitem>
+<simpara>文字列内での変数展開</simpara>
+</listitem>
+<listitem>
+<simpara>マクロ</simpara>
+</listitem>
+</itemizedlist>
+<simpara>この本ではマクロの機能について、くわしくあつかいます。</simpara>
+</section>
+<section xml:id="_この本を読むうえで">
+<title>この本を読むうえで</title>
+<simpara>この本はHaxeの入門書ではないので、Haxeの基本文法やインストール手順などに触れません。ただHaxeを知らないプログラマでも読めるように、具体的にマクロがどのような問題を解決するのかに焦点を当てています。</simpara>
+<simpara>マクロはあつかいの難しい機能ですが、同時にとても魅力的な機能です。Haxeを知らない方も、この本を読んでいただいてその世界を感じていただけたらと思います。</simpara>
+</section>
+<section xml:id="_haxeのバージョンについて">
+<title>Haxeのバージョンについて</title>
+<simpara>この本では、Haxe 3.3.0 RC1のバージョンを前提に書かれています。</simpara>
+</section>
+</chapter>
+<chapter xml:id="_マクロの基本事項">
+<title>マクロの基本事項</title>
+<section xml:id="_ハロー_マクロ">
+<title>ハロー、マクロ</title>
+<simpara>Haxeのマクロは、Haxeのコンパイラの振る舞いをHaxeのコードで操作できる機能です。これがどういうことか理解するために、以下のコードを見てください。</simpara>
+<programlisting language="haxe" linenumbering="unnumbered">import haxe.macro.Context;
+
+class HelloMacro {
+    public static function hello():Void {
+        Context.error("Something Wrong!?", Context.makePosition({min:0, max:2, file:"HelloMacro.hx"}));
+    }
+}</programlisting>
+<simpara>これを<literal>HelloMacro.hx</literal>という名前で保存して、以下のコマンドでコンパイルをします。</simpara>
+<screen>haxe --macro HelloMacro.hello()</screen>
+<simpara>この引数はコンパイルの初期化段階で<literal>HelloMacro.hello()</literal>関数を呼び出す指定をしています。そして、この結果はコンパイルエラーです。</simpara>
+<screen>HelloMacro.hx:1: characters 0-2 : Something Wrong!?</screen>
+<simpara>しかし、これで問題ありません。これが意図した動作です。上のサンプルは、コンパイルエラーを起こすように命令をしています。そして、エラーの発生位置として<literal>HelloMacro.hx</literal>ファイルの0から2文字目を指定しています。</simpara>
+<simpara>これがまさに「Haxeのコンパイラの振る舞いをHaxeのコードで操作する」ということです。もちろんマクロでできるのはそれだけではありません。Haxeの抽象構文木(AST)にアクセスして書き換えたり、クラスに変数を追加したり、リソースの埋め込みを行ったり、コンパイルのさまざまな過程に介入することができます。</simpara>
+</section>
+<section xml:id="_haxeのコンパイルの過程">
+<title>Haxeのコンパイルの過程</title>
+<simpara>マクロとコンパイルには深い関係がありますから、まずHaxeのコンパイルがどのように進むのか知っておくとよいでしょう。</simpara>
+<simpara>以下は、コンパイルの過程を簡単な図にしたものです。</simpara>
+<informalfigure>
+<mediaobject>
+<imageobject>
+<imagedata fileref="resources/images//compile.png"/>
+</imageobject>
+<textobject><phrase>コンパイル過程</phrase></textobject>
+</mediaobject>
+</informalfigure>
+<simpara>マクロを使用した場合、この内、ソースから型付きASTまでの過程は2重に動作します。</simpara>
+<simpara>つまり、1つ目はマクロのコードを読み込むため、2つ目は実際のコードを出力するためのものです。マクロとして読み込まれたコードは、実際出力のためのコンパイルの各過程を操作するのに使用されます。</simpara>
+<simpara>同一のファイル内で、マクロ用の読み込みと、実際出力の読み込みで、別々のコードを読みこみさせたい場合、<literal>macro</literal>コンパイル条件フラグで分岐をさせます。</simpara>
+<simpara>例を見てみます。</simpara>
+<programlisting language="haxe" linenumbering="unnumbered">#if macro
+class Macro {}
+#else
+class Main {}
+#end</programlisting>
+<simpara>このように記述した場合、マクロの読み込み時には<literal>class Macro {}</literal>として解釈されて、実際の出力用には<literal>class Main {}</literal>として解釈されます。</simpara>
+</section>
+<section xml:id="_マクロの種類">
+<title>マクロの種類</title>
+<simpara>Haxeのマクロはいくつかの種類があります。この本では以下の4種類に分けてあつかいます。かっこ内は、出力用のコンパイルがどの段階のときに実行されるかです。</simpara>
+<itemizedlist>
+<listitem>
+<simpara>初期化マクロ（初期化段階）</simpara>
+</listitem>
+<listitem>
+<simpara>式マクロ（構文解析の途中）</simpara>
+</listitem>
+<listitem>
+<simpara>ビルドマクロ（構文解析の途中）</simpara>
+</listitem>
+<listitem>
+<simpara>イベントハンドラ(<literal>onGenerate</literal>は生成前、<literal>onAfterGenerate</literal>は生成後)</simpara>
+</listitem>
+</itemizedlist>
+<simpara>次の章から、それぞれが具体的にどういうものなのか実用例と共にみていきます。</simpara>
+</section>
+</chapter>
+<chapter xml:id="_初期化マクロ">
+<title>初期化マクロ</title>
+<simpara>初期化マクロはもうすでに見ています。最初のコンパイルエラーの例がそうでした。コンパイラオプションで関数を指定するとコンパイルの初期化段階で実行されます。</simpara>
+<section xml:id="_ビルド日時の埋め込み">
+<title>ビルド日時の埋め込み</title>
+<simpara>例えばスマートフォンアプリの開発をしていると、いま端末に入っているアプリがいつビルドしたバージョンなのかわからなくなってしまうことがあります。こういった場合、ビルドした日時を開発版のアプリに埋め込んで、画面に表示してしまうといつのバージョンなのかが一目でわかるようになります。</simpara>
+<simpara>以下は初期化マクロを使って日時を埋め込んで、出力するサンプルです。</simpara>
+<programlisting language="haxe" linenumbering="unnumbered">import haxe.Resource;
+import haxe.io.Bytes;
+
+#if macro
+import haxe.macro.Context;
+#end
+
+class EmbeddingDate {
+    public static var DATE_RESOURCE_KEY = "dateResource";
+
+    #if macro
+    public static function initialize():Void {
+        // 初期化マクロのエントリーポイント
+
+        // 現在時刻を取得して文字列に
+        var dateString = Date.now().toString();
+
+        // 文字列をリソースとして埋め込み
+        Context.addResource(DATE_RESOURCE_KEY, Bytes.ofString(dateString));
+    }
+    #end
+
+    public static function main():Void {
+        // アプリの実行時のエントリーポイント
+
+        // リソースからビルド日時を取り出して出力
+        trace(Resource.getString(DATE_RESOURCE_KEY));
+    }
+}</programlisting>
+<simpara>これを以下のオプションで、Nekoのバイトコードにコンパイルします。</simpara>
+<programlisting language="sh" linenumbering="unnumbered">haxe --macro EmbeddingDate.initialize() -main EmbeddingDate -neko EmbeddingDate.n</programlisting>
+<simpara>そして出力されたファイルを実行します。</simpara>
+<programlisting language="sh" linenumbering="unnumbered">neko EmbeddingDate.n</programlisting>
+<simpara>すると以下のようにビルド日時の出力がされます。</simpara>
+<screen>EmbeddingDate.hx:30: 2016-04-01 00:00:09</screen>
+<simpara>今回はマクロから実行時へ情報をわたすのに、<literal>Context.addResource</literal>関数で情報を埋め込んで、実行時に<literal>Resource</literal>でそれを取り出す方法をとりました。これはマクロでよく使うパターンです。</simpara>
+<simpara>時刻以外にも以下のような情報を見れるようにすると、ビルドした状況が確認できて便利です。</simpara>
+<itemizedlist>
+<listitem>
+<simpara><literal>Sys.systemName()</literal> : OS</simpara>
+</listitem>
+<listitem>
+<simpara><literal>Context.defines()</literal> : コンパイラフラグ</simpara>
+</listitem>
+</itemizedlist>
+<simpara>Haxe公式サイトのCookbookでは、gitのコマンドを呼び出して、Gitのコミットハッシュ値を埋め込む方法も紹介されています。</simpara>
+<section xml:id="_tips_マクロとnekoパッケージ">
+<title>Tips: マクロとnekoパッケージ</title>
+<simpara>マクロの実行時の標準ライブラリはhaxe.macroパッケージやsysパッケージだけでなくnekoパッケージも利用可能です。</simpara>
+</section>
+</section>
+<section xml:id="_フィールドの削除_型の変更_タグ付け">
+<title>フィールドの削除、型の変更、タグ付け</title>
+<simpara>HaxeではJavaScriptのライブラリなど出力ターゲット側のライブラリを使いたい場合は、多くの場合、型定義ファイル(extern)を用意します。</simpara>
+<simpara>使いたいライブラリが有名なものであれば、多くの場合externをすでに作って公開している人がいるのでそれを使えばよいのですが、このときに問題がある場合があります。それは、使いたいライブラリのバージョンとexternのバージョンが合っていない場合です。</simpara>
+<simpara>こういった場合はexternを直接編集してしまいたくなりますが、そうすると元のexternが更新されたときなどに面倒です。</simpara>
+<simpara>サードパーティのexternだとちゃんとメンテナンスされないことも多いので、externを自分で編集してしまうのは実際悪くない選択肢です。ただし必要な変更がフィールドの削除や、メタデータタグ、型の変更で済むのであれば、初期化マクロの出番です。</simpara>
+<programlisting language="haxe" linenumbering="unnumbered">#if macro
+import haxe.macro.Compiler;
+#end
+
+// externクラス
+extern class SampleExtern {
+    public static function test():Void;
+    public static function test2():Void;
+    public static function test3():Void;
+}
+
+class PatchExtern {
+    #if macro
+    public static function initialize():Void {
+        // SampleExtern.testに非推奨のタグ付け
+        Compiler.addMetadata("@:deprecated", "SampleExtern", "test", true);
+
+        // SampleExtern.test2を削除
+        Compiler.removeField("SampleExtern", "test2", true);
+
+        // SampleExtern.test3の戻り値をStringに変更
+        Compiler.setFieldType("SampleExtern", "test3", "String", true);
+    }
+    #else
+    public static function main():Void {
+        // コンパイル時に非推奨の警告が表示される
+        SampleExtern.test();
+
+        // アクセスしようとするとエラー
+        // SampleExtern.test2();
+
+        // 戻り値がStringに変更されているので、traceの引数に使える
+        trace(SampleExtern.test3());
+    }
+    #end
+}</programlisting>
+<simpara>こうしてマクロで修正をしておくと、元のexternが更新された場合にも比較的ラクに追随することができます。もちろん、このようなフィールドに対する編集はexternでないクラスに対しても同様に可能です。</simpara>
+<section xml:id="_tips_パッチファイル">
+<title>Tips: パッチファイル</title>
+<simpara>変更が複数必要であれば、パッチファイルを使うと良いです。先ほどの例と、同じ意味になるパッチは以下の通りです。</simpara>
+<screen>@:deprecated static SampleExtern.test
+-static SampleExtern.test2
+static SampleExtern.test3 : String</screen>
+<simpara>これを<literal>sample.patch</literal>というファイル名で保存して、マクロから<literal>Compiler.patchTypes</literal>で適用します。</simpara>
+<screen>    public static function initialize():Void {
+        Compiler.patchTypes("sample.patch");
+    }</screen>
+<simpara>変更するフィールドが<literal>static</literal>でない場合は、単純にパッチファイルの各<literal>static </literal>を消せば動作します。</simpara>
+</section>
+</section>
+<section xml:id="_include">
+<title>include</title>
+<simpara>通常Haxeでは基本的にコンパイルオプションの<literal>-main</literal>でmain関数を持つクラスを指定してコンパイルを行いますが、実はこの指定をしなくてもコンパイルは可能です。ここでは初期化マクロからコンパイル対象を指定する方法を紹介します。</simpara>
+<simpara><literal>IncludeMacro.hx</literal></simpara>
+<screen>import haxe.macro.Compiler;
+
+class IncludeMacro {
+    public static function initialize():Void {
+        // libパッケージ以下のすべての型をコンパイル対象に指定
+        Compiler.include("lib", true);
+    }
+}</screen>
+<simpara><literal>lib/IncludeTest.hx</literal></simpara>
+<screen>package lib;
+
+class IncludeTest {
+    public function new() {
+        trace(Math.random());
+    }
+}</screen>
+<simpara>以上の2つのファイルを使って、以下のコマンドでJavaScriptにコンパイルします。</simpara>
+<screen>haxe -js lib.js --macro IncludeMacro.initialize()</screen>
+<simpara>すると、以下のJavaScriptが生成されます。</simpara>
+<programlisting language="javascript" linenumbering="unnumbered">(function (console) { "use strict";
+var lib_IncludeTest = function() {
+    console.log(Math.random());
+};
+})(typeof console !== "undefined" ? console : {log:function(){}});</programlisting>
+<simpara>メインクラスを指定しなくてもコンパイルが成功しており、lib.IncludeTestクラスが出力結果に含まれているのが分かります。</simpara>
+<simpara>このようなコンパイル対象の指定方法はHaxeでJavaScriptのライブラリを作成したい場合に便利です。Haxeはmain関数から到達できないコードを出力コードから省くデッドコード削除機能を備えていますが、上記のような指定を行った場合パッケージ全体を出力に含めた上でそこから使用されていないコードを削除してくれます。</simpara>
+<section xml:id="_tips_expose">
+<title>Tips: @:expose</title>
+<simpara>HaxeからJavaScriptに出力したクラスや関数は、デフォルトではJavaScriptからのアクセスができません。JavaScriptからアクセスしたいクラスや関数には以下のように<literal>@:expose</literal>のタグを付けてください。</simpara>
+<programlisting language="haxe" linenumbering="unnumbered">@:expose
+class IncludeTest {</programlisting>
+<simpara>こうするとJavaScritpから、<literal>new lib.IncludeTest()</literal>や<literal>IncludeTest</literal>のフィールドが呼び出せるようになります。</simpara>
+</section>
+<section xml:id="_tips_ファイル単体でのinclude">
+<title>Tips: ファイル単体でのinclude</title>
+<simpara>パッケージまるごとでは無くファイル1つ1つをincludeしたい場合、単純にコマンドライン上でそのファイルのパスを指定します宇</simpara>
+<screen>haxe lib.IncludeTest lib.IncludeTest2</screen>
+</section>
+</section>
+<section xml:id="_exclude">
+<title>exclude</title>
+<simpara>JavaScriptターゲットで外部ライブラリを使いたい場合は、JavaScriptで直接書かれたライブラリを使うかHaxeで書かれたライブラリをそのまま使うことが多いですが、まれにHaxeからJavaScriptに出力したコードをまたHaxeから使いたいということがあります。</simpara>
+<simpara>例えば、ライブラリ本体とそれに対するプラグインの両方をHaxeで書きたいという場合です。この場合、本体のコードに依存しているプラグインを単純にコンパイルすると、本体側のコードがプラグインに含まれてしまいます。</simpara>
+<simpara>このような場合に、初期化マクロで<literal>exclude</literal>を行うと本体側のコードを出力から削除できます。以下は、先ほどの<literal>lib.IncludeTest</literal>に依存するようなコードで<literal>exclude</literal>を行っているサンプルです。</simpara>
+<programlisting language="haxe" linenumbering="unnumbered">import lib.IncludeTest;
+
+#if macro
+import haxe.macro.Compiler;
+#end
+
+class ExcludeTest {
+    public function new() {
+        new IncludeTest();
+    }
+
+    #if macro
+    public static function initialize():Void {
+        // libパッケージ以下を、出力結果に含めない
+        Compiler.exclude("lib");
+    }
+    #end
+}</programlisting>
+<simpara>これをコンパイルします。</simpara>
+<programlisting language="sh" linenumbering="unnumbered">haxe ExcludeTest -js exclude_test.js --macro ExcludeTest.initialize()</programlisting>
+<simpara>すると、以下が出力されます。</simpara>
+<programlisting language="javascript" linenumbering="unnumbered">(function (console) { "use strict";
+var ExcludeTest = function() { };
+ExcludeTest.main = function() {
+    new lib.IncludeTest();
+};
+})(typeof console !== "undefined" ? console : {log:function(){}});</programlisting>
+<simpara>確かに、<literal>lib.IncludeTest</literal>の呼び出しを行っていますが、<literal>lib.IncludeTest</literal>自体の実装は含まないようなコードが生成できました。</simpara>
+<section xml:id="_tips_gen_hx_classes">
+<title>Tips: --gen-hx-classes</title>
+<simpara>この本体とプラグインの関係を実現できる機能としては、<literal>--gen-hx-classes</literal>もあります。<literal>--gen-hx-classes</literal>のオプションをつけてHaxeのコンパイラを実行すると、ソースコードからその<literal>extern</literal>を生成することができます。</simpara>
+<simpara>この機能ではjarやswcなどターゲットのライブラリから<literal>extern</literal>を生成することもできるのでその用途で使用されることも多いです。</simpara>
+</section>
+<section xml:id="_tips_初期化マクロとhaxe_macro_compiler">
+<title>Tips: 初期化マクロとhaxe.macro.Compiler</title>
+<simpara>初期化マクロで指定する関数は自作の関数でなくても、標準ライブラリの関数を直接指定することが可能です。つまり、<literal>exclude</literal>の例は以下のコマンドでも同じ結果になります。</simpara>
+<screen>haxe ExcludeTest -js exclude_test.js --macro haxe.macro.Compiler.exclude('lib')</screen>
+<simpara>さらに、<literal>haxe.macro.Compiler</literal>クラスの関数を使う場合クラス名が省略可能です。</simpara>
+<screen>haxe ExcludeTest -js exclude_test.js --macro exclude('lib')</screen>
+</section>
+</section>
+</chapter>
+<chapter xml:id="_式マクロ">
+<title>式マクロ</title>
+<simpara>式マクロは関数呼び出しのように使えるマクロです。Haxeの式を受け取って別の式へと変換します。</simpara>
+<section xml:id="_処理を2回繰り返す">
+<title>処理を2回繰り返す</title>
+<simpara>式マクロがどのようなものか理解するために、同じ処理を2回くり返すマクロを書いてみます。</simpara>
+<screen>import haxe.macro.Context;
+import haxe.macro.Expr;
+
+class ExprMacro {
+    public static macro function twice(expr:Expr):Expr {
+        return {
+            expr: ExprDef.EBlock([expr, expr]),
+            pos: Context.currentPos(),
+        }
+    }
+}</screen>
+<simpara>普通の関数定義のようですが、<literal>macro</literal>の修飾子がこの関数が式マクロであることを表しています。引数と戻り値に使われている<literal>haxe.macro.Expr</literal>は、Haxeの抽象構文木(AST)を表す構造体です。要素の種類を表すenumと、その要素がコードのどの位置から来たかの情報で構成されます。このマクロではもらった式を2度繰り返すブロック式を生成して返しています。<literal>Context.currentPos()</literal>はこの関数の呼び出し箇所の位置情報で、生成したブロック式の位置情報としてこれを割り当てています。</simpara>
+<simpara>このマクロを実際につかってみます。</simpara>
+<programlisting language="haxe" linenumbering="unnumbered">class ExprMacroTest {
+    static function main() {
+        var i = 0;
+        ExprMacro.twice(i += 4);
+        trace(i); // 8
+    }
+}</programlisting>
+<simpara>コンパイル時に<literal>ExprMacro.twice</literal>関数に<literal>i += 4</literal>の式の構文木が渡されて、それを繰り返すブロック式を生成します。つまり、コンパイルの過程で<literal>main</literal>関数は以下の意味に書き換えがされます。</simpara>
+<programlisting language="haxe" linenumbering="unnumbered">    static function main() {
+        var i = 0;
+        {
+            i += 4;
+            i += 4;
+        }
+        trace(i); // 8
+    }</programlisting>
+<section xml:id="_tips_引数に使える型">
+<title>Tips: 引数に使える型</title>
+<simpara>マクロの関数の引数としては<literal>Expr</literal>型の他に、基本型、文字列型、それらの配列が使用できます。これらの型を指定した場合、そのリテラルを記述して渡すとその値を受け取ることができます。また最後の引数に<literal>Array&lt;Expr&gt;</literal>を指定した場合、<literal>Expr</literal>を可変長引数で受け取ることができます。</simpara>
+</section>
+<section xml:id="_tips_レイフィケーション">
+<title>Tips: レイフィケーション</title>
+<simpara>ブロック式一つ作るにも<literal>ExprDef.EBlock</literal>だとか<literal>Context.currentPos</literal>だとかを書かないといけないのは面倒です。Haxeのマクロではこのような<literal>haxe.macro.Expr</literal>の構造体をもっと簡単に書くための構文が用意されています。それがレイフィケーション(Reification)です。</simpara>
+<simpara>さきほどの<literal>twice</literal>をレイフィケーションを使って書き換えてみます。</simpara>
+<programlisting language="haxe" linenumbering="unnumbered">    public static macro function twice(expr:Expr):Expr {
+        return macro {
+            $expr;
+            $expr;
+        }
+    }
+}</programlisting>
+<simpara>元のコードよりも簡単に、もらった式を2回繰り返すブロック式を表現できています。レイフィケーションは<literal>macro 式</literal>の形で使用できます。<literal>macro</literal>に続けてHaxeのコードをそのまま記述するとそれを表す<literal>haxe.macro.Expr</literal>を返します。<literal>$</literal>はエスケープの記号で<literal>$expr</literal>はその位置で<literal>expr</literal>変数に格納されている式を使用することを指定しています。</simpara>
+<simpara>使用できるエスケープには以下の種類があります。</simpara>
+<informaltable frame="all" rowsep="1" colsep="1">
+<tgroup cols="3">
+<colspec colname="col_1" colwidth="33.3333*"/>
+<colspec colname="col_2" colwidth="33.3333*"/>
+<colspec colname="col_3" colwidth="33.3334*"/>
+<thead>
+<row>
+<entry align="left" valign="top"></entry>
+<entry align="left" valign="top">型</entry>
+<entry align="left" valign="top">説明</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry align="left" valign="top"><simpara><literal>${}</literal>、<literal>$e{}</literal></simpara></entry>
+<entry align="left" valign="top"><simpara><literal>Expr-&gt;Expr</literal></simpara></entry>
+<entry align="left" valign="top"><simpara><literal>{}</literal>の中身を評価して、その位置に展開</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><literal>$a{}</literal></simpara></entry>
+<entry align="left" valign="top"><simpara><literal>Array&lt;Expr&gt;-&gt;Array&lt;Expr&gt; または Array&lt;Expr&gt;-&gt;Expr</literal></simpara></entry>
+<entry align="left" valign="top"><simpara><literal>Array&lt;Expr&gt;</literal>を期待する位置に記述すると、値をその位置に展開。<literal>Expr</literal>を期待する位置では、配列の宣言の式に変換して展開。</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><literal>$b{}</literal></simpara></entry>
+<entry align="left" valign="top"><simpara><literal>Array&lt;Expr&gt;-&gt;Expr</literal></simpara></entry>
+<entry align="left" valign="top"><simpara>ブロック式。</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><literal>$i{}</literal></simpara></entry>
+<entry align="left" valign="top"><simpara><literal>String-&gt;Expr</literal></simpara></entry>
+<entry align="left" valign="top"><simpara>文字列から識別子を生成。</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><literal>$p{}</literal></simpara></entry>
+<entry align="left" valign="top"><simpara><literal>Array&lt;String&gt;-&gt;Expr</literal></simpara></entry>
+<entry align="left" valign="top"><simpara>フィールドアクセス式。</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><literal>$v{}</literal></simpara></entry>
+<entry align="left" valign="top"><simpara><literal>Dynamic-&gt;Expr</literal></simpara></entry>
+<entry align="left" valign="top"><simpara>その値のリテラルの式を生成。基本型、enumのインスタンス、それらの配列で動作する。</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><literal>object.$name</literal></simpara></entry>
+<entry align="left" valign="top"><simpara><literal>String-&gt;Expr</literal></simpara></entry>
+<entry align="left" valign="top"><simpara>フィールドアクセス。</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><literal>var $name = 1;</literal></simpara></entry>
+<entry align="left" valign="top"><simpara><literal>String-&gt;Expr</literal></simpara></entry>
+<entry align="left" valign="top"><simpara>変数宣言。</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><literal>function $name () {}</literal></simpara></entry>
+<entry align="left" valign="top"><simpara><literal>String-&gt;Expr</literal></simpara></entry>
+<entry align="left" valign="top"><simpara>関数宣言。</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><literal>{ $name : 1 }</literal></simpara></entry>
+<entry align="left" valign="top"><simpara><literal>String-&gt;Expr</literal></simpara></entry>
+<entry align="left" valign="top"><simpara>オブジェクトのリテラル。</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><literal>try e() catch($name:Dynamic) {}</literal></simpara></entry>
+<entry align="left" valign="top"><simpara><literal>String-&gt;Expr</literal></simpara></entry>
+<entry align="left" valign="top"><simpara>try-catch</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><literal>new $typePath()</literal></simpara></entry>
+<entry align="left" valign="top"><simpara><literal>TypePath-&gt;Expr</literal></simpara></entry>
+<entry align="left" valign="top"><simpara>インスタンス化。</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><literal>@:pos(p)</literal></simpara></entry>
+<entry align="left" valign="top"><simpara><literal>Position</literal>を引数に取るタグ</simpara></entry>
+<entry align="left" valign="top"><simpara>その式の位置情報を`p`に差し替え。</simpara></entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+</section>
+</section>
+<section xml:id="_時間計測">
+<title>時間計測</title>
+<simpara>式マクロの振る舞いや仕様については確認できたので、この節からは式マクロが現実でどう役に立つのかを見ていきます。</simpara>
+<simpara>プログラムの一部をカジュアルに時間計測したいという場合、ローカル変数に時刻を記録して処理が終わった後の時刻の差分をとるというコードをよく書きます。</simpara>
+<programlisting language="haxe" linenumbering="unnumbered">class BenchmarkSample {
+    static function main() {
+        var time = Date.now().getTime();
+
+        // 何か時間のかかる処理
+        for (i in 0...100000) {}
+
+        trace((time - Date.now().getTime()) + "ms");
+    }
+}</programlisting>
+<simpara>しかし、何度も書くには長くて面倒です。そこで次のようなマクロを定義しておくと、簡単に時間の計測が行えるようになります。</simpara>
+<programlisting language="haxe" linenumbering="unnumbered">import haxe.macro.Expr;
+
+class ExprMacro {
+    public static macro function bench(target:Expr):Expr {
+        return macro {
+            var time = Date.now().getTime();
+            $target;
+            trace((time - Date.now().getTime()) + "ms");
+        }
+    }
+}</programlisting>
+<simpara>これにより元の時間計測のコードを、以下の関数呼び出しの形式で書き換えることができます。</simpara>
+<programlisting language="haxe" linenumbering="unnumbered">    static function main():Void {
+        ExprMacro.bench(
+            for (i in 0...100000) {}
+        );
+    }</programlisting>
+<simpara>面倒な記述はなくなり簡単に時間計測ができるようになりました。</simpara>
+<section xml:id="_tips_式のデバッグ方法">
+<title>Tips: 式のデバッグ方法</title>
+<simpara>自分が書いた式マクロが正しい式を生成できているのか確認するには、<literal>haxe.macro.Printer</literal>が便利です。<literal>haxe.macro.Printer</literal>は式や型のインスタンスをHaxeのコードの文字列に変換するモジュールです。</simpara>
+</section>
+<section xml:id="_tips_staticでないマクロ">
+<title>Tips: staticでないマクロ</title>
+<simpara>HaxeのマニュアルやGithubなどで見つけられるほとんどの式マクロは<literal>static</literal>として定義されているので、式マクロは<literal>static</literal>な関数としてのみ定義できると勘違いされがちですが、実際はそうではありません。</simpara>
+<simpara>以下のようにstaticでない式マクロを定義することもできます。</simpara>
+<screen>import haxe.macro.Expr;
+
+class NonStaticTest
+{
+	public function new() {}
+
+	#if !macro
+	public static function main() {
+		var array = new NonStaticTest().test();
+	}
+	#end
+
+	private macro function test(self:Expr):Expr {
+		return macro [$self, $self];
+	}
+}</screen>
+<simpara>この場合、上記の例のように、staticでない式マクロを定義されている引数より1つ少なくして呼び出します。こうすると、<literal>.test()</literal>の左側の式が第一引数として受け取られます。つまり、<literal>new NonStaticTest().test()</literal>は、<literal>[new NonStaticTest(), new NonStaticTest()]</literal>に変換されています。</simpara>
+</section>
+</section>
+<section xml:id="_ローカル変数のデバッグトレース">
+<title>ローカル変数のデバッグトレース</title>
+<simpara>バグについての調査を行うとき、ある時点での変数の状態をまとめて知りたいことがあります。このような場合、マクロを使ってローカル変数をまとめてトレースできるようにしておくと便利です。</simpara>
+<simpara>Haxeではマクロの呼び出し箇所で定義されているローカル変数の一覧を`Context.getLocalTVars()`関数で取得できます。これを使って以下のようなマクロを定義しておきます。</simpara>
+<screen>import haxe.macro.Context;
+import haxe.macro.Expr;
+
+class DebugMacro {
+	public static macro function debug() {
+		var exprs:Array&lt;Expr&gt; = [];
+		for (tvar in Context.getLocalTVars()) {
+			// 変数strに"変数の名前 : 変数の中身"の文字列を追加する式を生成
+			var expr = macro str += $v{tvar.name} + " : " + $i{tvar.name} + "\n";
+			exprs.push(expr);
+		}
+
+		// 呼び出し元の関数名を取得
+		var methodName = Context.getLocalMethod();
+
+		// 変数strを定義して、用意した式の配列をブロック式化する
+		return macro {
+			var str = "Called from " + $v{methodName} + "\n";
+			$b{exprs}
+			trace(str + "--------\n");
+		};
+	}
+}</screen>
+<simpara>そして、この<literal>debug</literal>関数を次のように呼び出してみます。</simpara>
+<screen>class DebugMacroTest {
+	public static function main() {
+		test(100);
+	}
+
+	public static function test(hoge:Int) {
+		var fuga = "ok";
+		DebugMacro.debug();
+	}
+}</screen>
+<simpara>結果は、次の通りです</simpara>
+<screen>DebugMacroTest.hx:20: Called from test
+fuga : ok
+hoge : 100
+--------</screen>
+<simpara>呼び出し元である<literal>test</literal>関数のローカル変数の一覧を表示することができました。これらに合わせて<literal>this</literal>インスタンスのフィールドについてもあわせて出力するようにすれば、バグ発生時の状況を調べるための強力なツールになります。</simpara>
+<section xml:id="_tips_出力ターゲット側のデバッグ機能">
+<title>Tips: 出力ターゲット側のデバッグ機能</title>
+<simpara>Haxeではターゲット側のデバッグ機能もサポートされているものが多いので、そちらも使うとバグの調査がはかどります。例えば、Flashターゲットの場合はFlashDevelopではステップ実行やブレークポイントがサポートされています。JavaScriptの場合は、<literal>js.Lib.debug()</literal>関数でブレークポイント(debuggerステートメント)が使えたり、ソースマップで実行エラーなどの発生行がHaxeのソースコード上の位置でわかったりします。</simpara>
+</section>
+<section xml:id="_tips_エラーの記述">
+<title>Tips: エラーの記述</title>
+<simpara>式マクロの記述をする場合は、引数で与えられた式についてなるべく丁寧にエラー処理を記述するのが重要です。式マクロでは、エラーになるべき式がエラーになっていないとデバッグがとても辛くなります。冒頭のサンプルで紹介した通り、マクロからは警告やエラーが発生させられますので積極的に使うといいです。</simpara>
+<simpara>ただし、HaxeのコンパイラはUTF-8の文字列の出力に対応しておらず、日本語でエラーを出力をすると(少なくともWindowsでは)文字化けを起こすので注意が必要です。</simpara>
+</section>
+</section>
+</chapter>
+<chapter xml:id="_ビルドマクロ">
+<title>ビルドマクロ</title>
+<simpara>ビルドマクロはクラスへの変数や関数の追加や削除を行うマクロです。クラスにメタデータタグを付けて呼び出すことができます。</simpara>
+<section xml:id="_定数を自動生成する">
+<title>定数を自動生成する</title>
+<simpara>ビルドマクロの典型的な使用例として、定数フィールドの自動生成があります。以下は、コンパイル時にフォルダ内のファイルを検索して、そのファイル名を定数として定義するサンプルです。</simpara>
+<screen>import haxe.macro.Context;
+import haxe.macro.Expr;
+import haxe.macro.Printer;
+import sys.FileSystem;
+
+class BuildMacro {
+	public static function addFileNames(directory:String):Array&lt;Field&gt; {
+		var fields:Array&lt;Field&gt; = [];
+
+		// ディレクトリ内のファイルに対してループ処理
+		for (fileName in FileSystem.readDirectory(directory)) {
+			// ファイル名を表す定数の式を作成
+			var expr = macro $v{fileName};
+
+			// フィールドを定義して追加。
+			// public static inline var 大文字ファイル名 = "ファイル名";
+			// の意味になる
+			fields.push({
+				name : StringTools.replace(fileName, ".", "_").toUpperCase(),
+				access : [Access.APublic, Access.AStatic, Access.AInline],
+				// 型にnullを指定すると推論をさせる。値はファイル名を表す定数の式
+				kind : FieldType.FVar(null, expr),
+				// 位置情報は関数の呼び出し元のものを使う
+				pos : Context.currentPos(),
+                // ドキュメントコメントの追加
+                doc : new Printer().printExpr(expr),
+			});
+		}
+
+		return fields;
+	}
+}</screen>
+<simpara>これをクラスに<literal>@:build</literal>のメタデータをつけて呼び出します。</simpara>
+<screen>@:build(BuildMacro.addFileNames("./assets"))
+class Constants {}</screen>
+<simpara>これにより、コンパイル時のワーキングディレクトリから<literal>./assets</literal>の位置にあるディレクトリを探索して、その直下にあるファイル名の定数が<literal>Constants</literal>の<literal>static</literal>フィールドとして生成されます。これは次のように利用できます。</simpara>
+<screen>class ConstantsTest {
+	public static function main() {
+		trace(Constants.SAMPLE_TXT); // ConstantsTest.hx:3: sample.txt
+	}
+}</screen>
+<simpara>これは、単純に<literal>"sample.txt"</literal>を文字列リテラルで使うのよりも手間がかかっているように見えるかもしれませんが、定数化には2つのメリットがあります。</simpara>
+<simpara>1つ目は「存在しないファイル名を指定しようとするとコンパイルエラーになる」ということです。これによりタイポが防げますし、ファイル名を変更した場合にもコード側でどこを修正すれば良いかすぐにわかります。</simpara>
+<simpara>2つ目は「エディタ上でのコード補完が効く」ようになることです。これはHaxeコンパイラ自体がエディタの補完用の機能を提供していて、多くのIDEやエディタはそれを使っているためです。つまり、マクロによるフィールドの追加が行われた上で補完がされます。このため長いファイル名を入力しなければならない場合でも、わざわざ目で確認したりコピペしたりせずに簡単に入力ができるようになります。</simpara>
+<simpara>このような<literal>@:build</literal>で定数を自動で生成する方法はファイル名だけでなく、JSON、CSV、HTML、CSSのデータを元に生成したりなどさまざま利用方法があります。</simpara>
+<section xml:id="_tips_マクロとドキュメント生成">
+<title>Tips: マクロとドキュメント生成</title>
+<simpara>JavaのJavadoc、JavaScriptのJSDocに当たる、いわゆるドキュメント生成ツールとしてhaxedocやdoxがあります。これらのツールでドキュメント生成を行った場合、ビルドマクロを使って追加したフィールドもちゃんと出力に含まれます。これは、ドキュメント生成用のxml出力もHaxeのコンパイラが持っている機能が使われるためです。</simpara>
+<simpara>ですから多くのフィールドをマクロで生成して、それらを一覧で確認したいような場合は、doxなどのドキュメント生成を使うのが良いかもしれません。</simpara>
+<simpara>また、ドキュメントコメントをビルドマクロから差し込むこともできます。複雑な式を生成した場合、生成した<literal>Expr</literal>インスタンスを<literal>haxe.macro.Printer</literal>で文字列に変換してそのままドキュメントコメントとして使ってしまうと、実際にどのような式が生成されているかを可視化できて便利です。</simpara>
+<simpara>これは、先ほどの定数生成でもやっています。</simpara>
+<simpara>このようにして追加したドキュメントコメントは、ただドキュメント生成で使えるだけでなく、コンパイラの補完機能を利用しているIDE上でも表示されます。</simpara>
+<informalfigure>
+<mediaobject>
+<imageobject>
+<imagedata fileref="resources/images//completion.png"/>
+</imageobject>
+<textobject><phrase>FlashDevelopでの補完</phrase></textobject>
+</mediaobject>
+</informalfigure>
+</section>
+<section xml:id="_tips_if_display">
+<title>Tips: #if display</title>
+<simpara>入力補完にマクロの実行結果が反映されるということは、重たい処理をマクロで行うとそれだけ入力補完が遅くなるということです。補完が遅くなるのを防ぎたい場合、<literal>display</literal>の条件フラグが役に立ちます。</simpara>
+<simpara>重たいマクロのコードは<literal>#if !display</literal>～<literal>#end</literal>で囲んでおくと、Haxeの補助機能ではその範囲のコードが無視されます。</simpara>
+</section>
+</section>
+<section xml:id="_関数の呼び出しをトレースする">
+<title>関数の呼び出しをトレースする</title>
+<simpara>もう一つビルドマクロの実用例として、クラスの関数すべての先頭に関数名と引数の内容の<literal>trace</literal>呼び出しを追加するマクロを紹介します。このようなマクロを定義しておくと、関数がどの順番で呼び出されているのかを簡単に追いかけることができるようになります。</simpara>
+<screen>import haxe.macro.Context;
+import haxe.macro.Expr.Field;
+import haxe.macro.Expr.FieldType;
+import haxe.macro.Type.FieldKind;
+
+class BuildMacro {
+	public static function methodTrace():Array&lt;Field&gt; {
+		// すでに定義されているフィールドを取得
+		var fields = Context.getBuildFields();
+
+		for (field in fields) {
+			switch (field.kind) {
+				case FieldType.FFun(func):
+					// trace用の式を準備
+					var traceArg = macro "auto trace: " + $v{field.name} + "(";
+
+					// trace用に引数も追加
+					var first = true;
+					for (arg in func.args) {
+						if (!first) {
+							traceArg = macro ${traceArg} + ",";
+						}
+						traceArg = macro ${traceArg} + $i{arg.name};
+						first = false;
+					}
+
+					traceArg = macro ${traceArg} + ")";
+
+					// 元の式の実行前にtrace文を差し込む
+					func.expr = macro {
+						trace(${traceArg});
+						${func.expr};
+					}
+
+				case _:
+					// 関数以外には何もしない。
+			}
+		}
+
+		return fields;
+	}
+}</screen>
+<simpara>これを以下のように使います。</simpara>
+<screen>@:build(BuildMacro.methodTrace())
+class TraceSample {
+	public static function main():Void {
+		for (i in 0...2) {
+			for (j in 0...3) {
+				test(i, j);
+			}
+		}
+	}
+
+	public static function test(i:Int, j:Int):Void {}
+}</screen>
+<simpara>実行結果は以下の通りです。</simpara>
+<screen>BuildMacro.hx:31: auto trace: main()
+BuildMacro.hx:31: auto trace: test(0,0)
+BuildMacro.hx:31: auto trace: test(0,1)
+BuildMacro.hx:31: auto trace: test(0,2)
+BuildMacro.hx:31: auto trace: test(1,0)
+BuildMacro.hx:31: auto trace: test(1,1)
+BuildMacro.hx:31: auto trace: test(1,2)</screen>
+<simpara>この例ではただ単に関数名を出力しているだけですが、より詳細な記録をすれば、呼び出し関数の多いクラスを調べたり、実行時間の長い関数を発見したりなど、さまざまなプロファイリングに応用できます。</simpara>
+<simpara>また、このようなビルドマクロは、初期化マクロから<literal>haxe.macro.Compiler</literal>の<literal>addGlobalMetadata</literal>関数で、パッケージ内のクラスに対して一括でビルドマクロの適用を行うことができます。</simpara>
+<section xml:id="_tips_コンパイルにかかった時間を計測する">
+<title>Tips: コンパイルにかかった時間を計測する</title>
+<simpara>マクロの処理にかかっている時間を知りたい場合、<literal>--times</literal>のコンパイラ引数をつけるとコンパイルの各処理にかかった時間が出力されるようになります。さらに<literal>-D macro_times</literal>のオプションをマクロの各処理の時間についての内訳が表示されるようになります。</simpara>
+</section>
+</section>
+</chapter>
+<chapter xml:id="_イベントハンドラ">
+<title>イベントハンドラ</title>
+<simpara>初期化マクロ、式マクロ、ビルドマクロからイベントハンドラの登録をすることで、より後のタイミングでの処理をさせることができます。</simpara>
+<simpara><literal>onGenerate</literal>はすべての型の構文解析と型付けが終わった後に実行されます。ここではすべての型の情報（型付け済みの抽象構文木を含む）を配列でうけとることができます。<literal>onAfterGenerate</literal>はさらに後に実行されて、出力後のファイルにアクセスできます。</simpara>
+<section xml:id="_linterを作る_ongenerate">
+<title>Linterを作る(onGenerate)</title>
+<simpara><literal>onGenerate</literal>で登録したハンドラには、コンパイル対象に含まれたすべての型が引数として渡されます。この型から、すべての型付け済みのASTにアクセスすることができますが、このAST対する変更はメタデータタグの変更に限られています。</simpara>
+<simpara><literal>onGenerate</literal>のタイミングでできることとしては、以下のような例が挙げられます。</simpara>
+<itemizedlist>
+<listitem>
+<simpara>メタデータタグや<literal>Context.addResource</literal>で、文字列やバイナリを埋め込む。</simpara>
+</listitem>
+<listitem>
+<simpara><literal>Type</literal>の情報を解析して、コンパイラ警告やエラーを出力する。</simpara>
+</listitem>
+</itemizedlist>
+<simpara>ここでは<literal>Type</literal>の情報をもとにコンパイラ警告を発生させる。いわゆるLinterの作成方法を紹介します。</simpara>
+<simpara>以下は、変数名がローワーキャメルケースであることをチェックするLinterです</simpara>
+<screen>import haxe.macro.Context;
+import haxe.macro.Type;
+
+class Linter {
+	// 初期化マクロとして呼び出す用
+	public static function initialize():Void {
+		Context.onGenerate(lint);
+	}
+
+	private static function lint(types:Array&lt;Type&gt;):Void {
+		for (type in types) {
+			switch (type) {
+				case Type.TInst(ref, _):
+					var classType = ref.get();
+					lintFields(classType.statics.get());
+					lintFields(classType.fields.get());
+
+				case Type.TAbstract(ref, _):
+					var abstractType = ref.get();
+					lintFields(abstractType.array);
+
+				case _:
+			}
+		}
+	}
+
+	// フィールドに対するチェック
+	private static function lintFields(fields:Array&lt;ClassField&gt;):Void {
+		for (field in fields) {
+			switch (field.kind) {
+				case FieldKind.FVar(VarAccess.AccInline, _):
+					// インライン変数をチェックから除外
+
+				case _:
+					// フィールド名のケースがおかしくないか判定。
+					if (!isValidFieldName(field.name)) {
+						Context.warning("should be lower camlcase", field.pos);
+					}
+			}
+		}
+	}
+
+	// 変数名がローワーキャメルケースであることのチェック
+	private static function isValidFieldName(name:String):Bool {
+		if (StringTools.startsWith(name, "get_") || StringTools.startsWith(name, "set_")) {
+			// getter、setter用のサフィックスを除外
+			name = name.substr(4);
+		} else {
+			// 先頭の_は使用可
+			while (name.substr(0, 1) == "_") {
+				name = name.substr(1);
+			}
+		}
+
+		if (name.length == 0) { return false;　}
+
+		// スネークケースでないことのチェック
+		if (name.indexOf("_") != -1) { return false; }
+
+		// 小文字始まりであることのチェック
+		var charCode = name.charCodeAt(0);
+		if (charCode &lt; 97 || 122 &lt; charCode) { return false; }
+
+		return true;
+	}
+}</screen>
+<simpara>これを例えば、以下のようなクラスと合わせて使います。</simpara>
+<screen>class LintSample {
+	public static function main():Void {
+		Test();
+		test_test();
+	}
+
+	// 大文字始まり
+	public static function Test():Void {}
+
+	// スネークケース
+	public static function test_test():Void {}
+}</screen>
+<simpara>これに対して、以下のような警告が発生します。</simpara>
+<screen>LintSample.hx:10: characters 15-38 : Warning : should be lower camlcase
+LintSample.hx:13: characters 15-43 : Warning : should be lower camlcase</screen>
+<simpara>実際にはこのコードだと<literal>Math.NaN</literal>などの標準ライブラリに対しても警告を出してしまうので、対象パッケージの限定などの工夫が必要になりますが、この方法を応用していけば循環的複雑度の検査などさまざまな静的コード解析を行うことができます。</simpara>
+<section xml:id="_tips_typeとhaxe_macro_type">
+<title>Tips: Typeとhaxe.macro.Type</title>
+<simpara>これまで、<literal>haxe.macro.Type</literal>というモジュールの<literal>import</literal>を使っていますが、これとは別にHaxeのライブラリにはトップレベルに<literal>Type</literal>というモジュールがあります。この両方を使用する場合、単純に<literal>haxe.macro.Type</literal>を<literal>import</literal>してしまうと、トップレベル<literal>Type</literal>は使えなくなってしまいます。これを回避する方法は、2通りあります。</simpara>
+<itemizedlist>
+<listitem>
+<simpara><literal>haxe.macro.Type</literal>を<literal>import</literal>せずに毎回フルパス指定で使う。</simpara>
+</listitem>
+<listitem>
+<simpara><literal>import haxe.macro.Type in MacroType</literal>というように別名での<literal>import</literal>を使う。</simpara>
+</listitem>
+</itemizedlist>
+</section>
+</section>
+<section xml:id="_出力にライセンス情報を追加する_onaftergenerate">
+<title>出力にライセンス情報を追加する(onAfterGenerate)</title>
+<simpara><literal>onAfterGenerate</literal>が動作するのはすでに出力が終わったあとです。ですから、これまでのコンパイルに介入するというようなことはできませんが、その代わりに出力ファイルを直接読み込んだり、書きこんだりができます。</simpara>
+<simpara>onAfterGenerateが役に立つ例としては、出力したファイルへのライセンス情報を記述があります。</simpara>
+<simpara>以下は<literal>js</literal>ターゲットの出力ファイルの先頭にライセンスについてのコメントを書き込むサンプルです。</simpara>
+<screen>import haxe.macro.Compiler;
+import haxe.macro.Context;
+import sys.io.File;
+
+class LicenseWriter {
+	// 初期化マクロとして呼び出す用
+	public static function initialize():Void {
+		Context.onAfterGenerate(write);
+	}
+
+	private static function write():Void {
+		var fileName = Compiler.getOutput();
+		var comment = "/*This is MIT License.*/\n";
+
+		File.saveContent(fileName, comment + File.getContent(fileName));
+	}
+}</screen>
+</section>
+</chapter>
+</book>
