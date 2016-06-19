@@ -64,7 +64,7 @@ set XSLTHL_CONFIG_URI=!XSLTHL_CONFIG_URI:\=/!
 
 if "%TYPE%" == "pdf" (
   set OUTPUT_PDF_FILE="%SOURCE_ROOTNAME%.pdf"
-  %FOPUB_CMD% -q -catalog -c "%DOCBOOK_XSL_DIR%\fop-config.xml" -xml "%SOURCE_FILE%" -xsl "%DOCBOOK_XSL_DIR%\fo-pdf.xsl" -pdf !OUTPUT_PDF_FILE! -param highlight.xslthl.config "%XSLTHL_CONFIG_URI%" -param admon.graphics.path "%DOCBOOK_DIR_PARAM%/images/" -param callout.graphics.path  "%DOCBOOK_DIR_PARAM%/images/callouts/" -param body.font.family GenShinGothic-Light -param dingbat.font.family GenShinGothic-Light -param monospace.font.family GenShinGothic-Monospace-Light -param sans.font.family GenShinGothic-Light -param title.font.family GenShinGothic-Light -param alignment left
+  %FOPUB_CMD% -q -catalog -c "%DOCBOOK_XSL_DIR%\fop-config.xml" -xml "%SOURCE_FILE%" -xsl "%DOCBOOK_XSL_DIR%\fo-pdf.xsl" -pdf !OUTPUT_PDF_FILE! -param highlight.xslthl.config "%XSLTHL_CONFIG_URI%" -param admon.graphics.path "%DOCBOOK_DIR_PARAM%/images/" -param callout.graphics.path  "%DOCBOOK_DIR_PARAM%/images/callouts/" -param body.font.family GenShinGothic-Normal -param dingbat.font.family GenShinGothic-Normal -param monospace.font.family GenShinGothic-Monospace-Normal -param sans.font.family GenShinGothic-Normal -param title.font.family GenShinGothic-Normal -param alignment left
   if not "%ERRORLEVEL%"=="0" goto fail else goto mainEnd
 )
 
