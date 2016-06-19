@@ -12,10 +12,10 @@ footer:
 font:
   catalog:
     genshin_gothic:
-      normal: GenShinGothic-ExtraLight.ttf
+      normal: GenShinGothic-Light.ttf
       bold: GenShinGothic-Bold.ttf
     genshin_gothic_mono:
-      normal: GenShinGothic-Monospace-ExtraLight.ttf
+      normal: GenShinGothic-Monospace-Light.ttf
       bold: GenShinGothic-Monospace-Bold.ttf
   fallbacks:
     - genshin_gothic
