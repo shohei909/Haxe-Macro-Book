@@ -14,6 +14,10 @@
 </info>
 <chapter xml:id="_はじめに">
 <title>はじめに</title>
+<section xml:id="_この本は何">
+<title>この本は何？</title>
+<simpara>Haxeのマクロについての解説本です。マクロの実用例とTipsを紹介していきます。</simpara>
+</section>
 <section xml:id="_haxeとは">
 <title>Haxeとは</title>
 <simpara>Haxeは静的型付けのプログラミング言語です。特徴的なのはその出力ターゲットの豊富さで、以下の3種類のバイトコードと8種類ソースコードへコンパイルすることが可能です。</simpara>
