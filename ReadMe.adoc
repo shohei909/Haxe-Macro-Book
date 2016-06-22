@@ -1,4 +1,11 @@
 = Haxe 実践マクロ
+shohei909
+
+:author: shohei909
+:firstname: shohei
+:authorinitials: shohei909
+:keywords: Haxe, Macro, 日本語
+:description: Haxeのマクロの実用とTipsをまとめた電子書籍
 :encoding: utf-8
 :lang: ja
 :toc: left
@@ -9,6 +16,9 @@
 :pagenums:
 :sectnums:
 :imagesdir: resources/images/
+:lang: ja
+:homepage: https://github.com/shohei909/Haxe-Macro-Book
+:source: https://github.com/shohei909/Haxe-Macro-Book
 
 == はじめに
 
@@ -286,7 +296,7 @@ static SampleExtern.test3 : String
 
 
 ``IncludeMacro.hx``
-```
+```haxe
 import haxe.macro.Compiler;
 
 class IncludeMacro {
@@ -299,7 +309,7 @@ class IncludeMacro {
 
 
 ``lib/IncludeSample.hx``
-```
+```haxe
 package lib;
 
 class IncludeSample {
@@ -412,13 +422,13 @@ ExcludeSample.main = function() {
 
 初期化マクロで指定する関数は自作の関数でなくても、標準ライブラリの関数を直接指定することが可能です。つまり、``exclude``の例は以下のコマンドでも同じ結果になります。
 
-```
+```sh
 haxe ExcludeSample -js exclude_test.js --macro haxe.macro.Compiler.exclude('lib')
 ```
 
 さらに、``haxe.macro.Compiler``クラスの関数を使う場合クラス名が省略可能です。
 
-```
+```sh
 haxe ExcludeSample -js exclude_test.js --macro exclude('lib')
 ```
 
@@ -431,7 +441,7 @@ haxe ExcludeSample -js exclude_test.js --macro exclude('lib')
 
 式マクロがどのようなものか理解するために、同じ処理を2回くり返すマクロを書いてみます。
 
-```
+```haxe
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
@@ -601,7 +611,7 @@ class NonStaticSample {
 
 Haxeではマクロの呼び出し箇所で定義されているローカル変数の一覧を`Context.getLocalTVars()`関数で取得できます。これを使って以下のようなマクロを定義しておきます。
 
-```
+```haxe
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
@@ -629,7 +639,7 @@ class DebugMacro {
 
 そして、この``debug``関数を次のように呼び出してみます。
 
-```
+```haxe
 class DebugMacroSample {
 	public static function main() {
 		test(100);
@@ -675,7 +685,7 @@ Haxeではターゲット側のデバッグ機能もサポートされている�
 
 ビルドマクロの典型的な使用例として、定数フィールドの自動生成があります。以下は、コンパイル時にフォルダ内のファイルを検索して、そのファイル名を定数として定義するサンプルです。
 
-```
+```haxe
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Printer;
@@ -712,14 +722,14 @@ class BuildMacro {
 
 これをクラスに``@:build``のメタデータをつけて呼び出します。
 
-```
+```haxe
 @:build(BuildMacro.addFileNames("./assets"))
 class Constants {}
 ```
 
 これにより、コンパイル時のワーキングディレクトリから``./assets``の位置にあるディレクトリを探索して、その直下にあるファイル名の定数が``Constants``の``static``フィールドとして生成されます。これは次のように利用できます。
 
-```
+```haxe
 class ConstantsSample {
 	public static function main() {
 		trace(Constants.SAMPLE_TXT); // ConstantsSample.hx:3: sample.txt
@@ -762,7 +772,7 @@ image::completion.png[FlashDevelopでの補完]
 
 もう一つビルドマクロの実用例として、クラスの関数すべての先頭に関数名と引数の内容の``trace``呼び出しを追加するマクロを紹介します。このようなマクロを定義しておくと、関数がどの順番で呼び出されているのかを簡単に追いかけることができるようになります。
 
-```
+```haxe
 import haxe.macro.Context;
 import haxe.macro.Expr.Field;
 import haxe.macro.Expr.FieldType;
@@ -809,7 +819,7 @@ class BuildMacro {
 
 これを以下のように使います。
 
-```
+```haxe
 @:build(BuildMacro.methodTrace())
 class TraceSample {
 	public static function main():Void {
@@ -866,7 +876,7 @@ BuildMacro.hx:31: auto trace: test(1,2)
 
 以下は、変数名がローワーキャメルケースであることをチェックするLinterです
 
-```
+```haxe
 import haxe.macro.Context;
 import haxe.macro.Type;
 
@@ -937,7 +947,7 @@ class Linter {
 
 これを例えば、以下のようなクラスと合わせて使います。
 
-```
+```haxe
 class LintSample {
 	public static function main():Void {
 		Test();
@@ -979,7 +989,7 @@ onAfterGenerateが役に立つ例としては、出力したファイルへの�
 
 以下は``js``ターゲットの出力ファイルの先頭にライセンスについてのコメントを書き込むサンプルです。
 
-```
+```haxe
 import haxe.macro.Compiler;
 import haxe.macro.Context;
 import sys.io.File;
