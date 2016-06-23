@@ -26,6 +26,7 @@ shohei909
 
 Haxeのマクロについての解説本です。マクロの実用例とTipsを紹介していきます。
 
+https://techbookfest.github.io/[技術書典]に出したかったのですが、落選したのでGithub上で公開しています。
 
 === Haxeとは
 
@@ -590,21 +591,21 @@ HaxeのマニュアルやGithubなどで見つけられるほとんどの式マ�
 
 以下のようにstaticでない式マクロを定義することもできます。
 
-```
+```haxe
 import haxe.macro.Expr;
 
 class NonStaticSample {
-	public function new() {}
-	
-	#if !macro
-	public static function main() {
-		var array = new NonStaticSample().test();
-	}
-	#end
-	
-	private macro function test(self:Expr):Expr {
-		return macro [$self, $self];
-	}
+    public function new() {}
+    
+    #if !macro
+    public static function main() {
+        var array = new NonStaticSample().test();
+    }
+    #end
+    
+    private macro function test(self:Expr):Expr {
+        return macro [$self, $self];
+    }
 }
 ```
 
@@ -622,24 +623,24 @@ import haxe.macro.Context;
 import haxe.macro.Expr;
 
 class DebugMacro {
-	public static macro function debug() {
-		var exprs:Array<Expr> = [];
-		for (tvar in Context.getLocalTVars()) {
-			// 変数strに"変数の名前 : 変数の中身"の文字列を追加する式を生成
-			var expr = macro str += $v{tvar.name} + " : " + $i{tvar.name} + "\n";
-			exprs.push(expr);
-		}
-		
-		// 呼び出し元の関数名を取得
-		var methodName = Context.getLocalMethod();
-		
-		// 変数strを定義して、用意した式の配列をブロック式化する
-		return macro {
-			var str = "Called from " + $v{methodName} + "\n";
-			$b{exprs}
-			trace(str + "--------\n");
-		};
-	}
+    public static macro function debug() {
+        var exprs:Array<Expr> = [];
+        for (tvar in Context.getLocalTVars()) {
+            // 変数strに"変数の名前 : 変数の中身"の文字列を追加する式を生成
+            var expr = macro str += $v{tvar.name} + " : " + $i{tvar.name} + "\n";
+            exprs.push(expr);
+        }
+        
+        // 呼び出し元の関数名を取得
+        var methodName = Context.getLocalMethod();
+        
+        // 変数strを定義して、用意した式の配列をブロック式化する
+        return macro {
+            var str = "Called from " + $v{methodName} + "\n";
+            $b{exprs}
+            trace(str + "--------\n");
+        };
+    }
 }
 ```
 
@@ -647,14 +648,14 @@ class DebugMacro {
 
 ```haxe
 class DebugMacroSample {
-	public static function main() {
-		test(100);
-	}
-	
-	public static function test(hoge:Int) {
-		var fuga = "ok";
-		DebugMacro.debug();
-	}
+    public static function main() {
+        test(100);
+    }
+    
+    public static function test(hoge:Int) {
+        var fuga = "ok";
+        DebugMacro.debug();
+    }
 }
 ```
 
@@ -698,31 +699,31 @@ import haxe.macro.Printer;
 import sys.FileSystem;
 
 class BuildMacro {
-	public static function addFileNames(directory:String):Array<Field> {
-		var fields:Array<Field> = [];
-		
-		// ディレクトリ内のファイルに対してループ処理
-		for (fileName in FileSystem.readDirectory(directory)) {
-			// ファイル名を表す定数の式を作成
-			var expr = macro $v{fileName};
-			
-			// フィールドを定義して追加。
-			// public static inline var 大文字ファイル名 = "ファイル名";
-			// の意味になる
-			fields.push({
-				name : StringTools.replace(fileName, ".", "_").toUpperCase(),
-				access : [Access.APublic, Access.AStatic, Access.AInline],
-				// 型にnullを指定すると推論をさせる。値はファイル名を表す定数の式
-				kind : FieldType.FVar(null, expr),
-				// 位置情報は関数の呼び出し元のものを使う
-				pos : Context.currentPos(),
+    public static function addFileNames(directory:String):Array<Field> {
+        var fields:Array<Field> = [];
+        
+        // ディレクトリ内のファイルに対してループ処理
+        for (fileName in FileSystem.readDirectory(directory)) {
+            // ファイル名を表す定数の式を作成
+            var expr = macro $v{fileName};
+            
+            // フィールドを定義して追加。
+            // public static inline var 大文字ファイル名 = "ファイル名";
+            // の意味になる
+            fields.push({
+                name : StringTools.replace(fileName, ".", "_").toUpperCase(),
+                access : [Access.APublic, Access.AStatic, Access.AInline],
+                // 型にnullを指定すると推論をさせる。値はファイル名を表す定数の式
+                kind : FieldType.FVar(null, expr),
+                // 位置情報は関数の呼び出し元のものを使う
+                pos : Context.currentPos(),
                 // ドキュメントコメントの追加
                 doc : new Printer().printExpr(expr),
-			});
-		}
-		
-		return fields;
-	}
+            });
+        }
+        
+        return fields;
+    }
 }
 ```
 
@@ -737,9 +738,9 @@ class Constants {}
 
 ```haxe
 class ConstantsSample {
-	public static function main() {
-		trace(Constants.SAMPLE_TXT); // ConstantsSample.hx:3: sample.txt
-	}
+    public static function main() {
+        trace(Constants.SAMPLE_TXT); // ConstantsSample.hx:3: sample.txt
+    }
 }
 ```
 
@@ -785,41 +786,41 @@ import haxe.macro.Expr.FieldType;
 import haxe.macro.Type.FieldKind;
 
 class BuildMacro {
-	public static function methodTrace():Array<Field> {
-		// すでに定義されているフィールドを取得
-		var fields = Context.getBuildFields();
-		
-		for (field in fields) {
-			switch (field.kind) {
-				case FieldType.FFun(func):
-					// trace用の式を準備
-					var traceArg = macro "auto trace: " + $v{field.name} + "(";
-					
-					// trace用に引数も追加
-					var first = true;
-					for (arg in func.args) {
-						if (!first) {
-							traceArg = macro ${traceArg} + ",";
-						}
-						traceArg = macro ${traceArg} + $i{arg.name};
-						first = false;
-					}
-					
-					traceArg = macro ${traceArg} + ")";
-					
-					// 元の式の実行前にtrace文を差し込む
-					func.expr = macro {
-						trace(${traceArg});
-						${func.expr};
-					}
-					
-				case _:
-					// 関数以外には何もしない。
-			}
-		}
-		
-		return fields;
-	}
+    public static function methodTrace():Array<Field> {
+        // すでに定義されているフィールドを取得
+        var fields = Context.getBuildFields();
+        
+        for (field in fields) {
+            switch (field.kind) {
+                case FieldType.FFun(func):
+                    // trace用の式を準備
+                    var traceArg = macro "auto trace: " + $v{field.name} + "(";
+                    
+                    // trace用に引数も追加
+                    var first = true;
+                    for (arg in func.args) {
+                        if (!first) {
+                            traceArg = macro ${traceArg} + ",";
+                        }
+                        traceArg = macro ${traceArg} + $i{arg.name};
+                        first = false;
+                    }
+                    
+                    traceArg = macro ${traceArg} + ")";
+                    
+                    // 元の式の実行前にtrace文を差し込む
+                    func.expr = macro {
+                        trace(${traceArg});
+                        ${func.expr};
+                    }
+                    
+                case _:
+                    // 関数以外には何もしない。
+            }
+        }
+        
+        return fields;
+    }
 }
 ```
 
@@ -828,15 +829,15 @@ class BuildMacro {
 ```haxe
 @:build(BuildMacro.methodTrace())
 class TraceSample {
-	public static function main():Void {
-		for (i in 0...2) {
-			for (j in 0...3) {
-				test(i, j);
-			}
-		}
-	}
-	
-	public static function test(i:Int, j:Int):Void {}
+    public static function main():Void {
+        for (i in 0...2) {
+            for (j in 0...3) {
+                test(i, j);
+            }
+        }
+    }
+    
+    public static function test(i:Int, j:Int):Void {}
 }
 ```
 
@@ -887,67 +888,67 @@ import haxe.macro.Context;
 import haxe.macro.Type;
 
 class Linter {
-	// 初期化マクロとして呼び出す用
-	public static function initialize():Void {
-		Context.onGenerate(lint);
-	}
-	
-	private static function lint(types:Array<Type>):Void {
-		for (type in types) {
-			switch (type) {
-				case Type.TInst(ref, _):
-					var classType = ref.get();
-					lintFields(classType.statics.get());
-					lintFields(classType.fields.get());
-					
-				case Type.TAbstract(ref, _):
-					var abstractType = ref.get();
-					lintFields(abstractType.array);
-					
-				case _:
-			}
-		}
-	}
-	
-	// フィールドに対するチェック
-	private static function lintFields(fields:Array<ClassField>):Void {
-		for (field in fields) {
-			switch (field.kind) {
-				case FieldKind.FVar(VarAccess.AccInline, _):
-					// インライン変数をチェックから除外
-					
-				case _:
-					// フィールド名のケースがおかしくないか判定。
-					if (!isValidFieldName(field.name)) {
-						Context.warning("should be lower camlcase", field.pos);
-					}
-			}
-		}
-	}
-	
-	// 変数名がローワーキャメルケースであることのチェック
-	private static function isValidFieldName(name:String):Bool {
-		if (StringTools.startsWith(name, "get_") || StringTools.startsWith(name, "set_")) {
-			// getter、setter用のサフィックスを除外
-			name = name.substr(4);
-		} else {
-			// 先頭の_は使用可
-			while (name.substr(0, 1) == "_") {
-				name = name.substr(1);
-			}
-		}
-		
-		if (name.length == 0) { return false;　}
-		
-		// スネークケースでないことのチェック
-		if (name.indexOf("_") != -1) { return false; }
-		
-		// 小文字始まりであることのチェック
-		var charCode = name.charCodeAt(0);
-		if (charCode < 97 || 122 < charCode) { return false; }
-		
-		return true;
-	}
+    // 初期化マクロとして呼び出す用
+    public static function initialize():Void {
+        Context.onGenerate(lint);
+    }
+    
+    private static function lint(types:Array<Type>):Void {
+        for (type in types) {
+            switch (type) {
+                case Type.TInst(ref, _):
+                    var classType = ref.get();
+                    lintFields(classType.statics.get());
+                    lintFields(classType.fields.get());
+                    
+                case Type.TAbstract(ref, _):
+                    var abstractType = ref.get();
+                    lintFields(abstractType.array);
+                    
+                case _:
+            }
+        }
+    }
+    
+    // フィールドに対するチェック
+    private static function lintFields(fields:Array<ClassField>):Void {
+        for (field in fields) {
+            switch (field.kind) {
+                case FieldKind.FVar(VarAccess.AccInline, _):
+                    // インライン変数をチェックから除外
+                    
+                case _:
+                    // フィールド名のケースがおかしくないか判定。
+                    if (!isValidFieldName(field.name)) {
+                        Context.warning("should be lower camlcase", field.pos);
+                    }
+            }
+        }
+    }
+    
+    // 変数名がローワーキャメルケースであることのチェック
+    private static function isValidFieldName(name:String):Bool {
+        if (StringTools.startsWith(name, "get_") || StringTools.startsWith(name, "set_")) {
+            // getter、setter用のサフィックスを除外
+            name = name.substr(4);
+        } else {
+            // 先頭の_は使用可
+            while (name.substr(0, 1) == "_") {
+                name = name.substr(1);
+            }
+        }
+        
+        if (name.length == 0) { return false;　}
+        
+        // スネークケースでないことのチェック
+        if (name.indexOf("_") != -1) { return false; }
+        
+        // 小文字始まりであることのチェック
+        var charCode = name.charCodeAt(0);
+        if (charCode < 97 || 122 < charCode) { return false; }
+        
+        return true;
+    }
 }
 ```
 
@@ -955,16 +956,16 @@ class Linter {
 
 ```haxe
 class LintSample {
-	public static function main():Void {
-		Test();
-		test_test();
-	}
-	
-	// 大文字始まり
-	public static function Test():Void {}
-	
-	// スネークケース
-	public static function test_test():Void {}
+    public static function main():Void {
+        Test();
+        test_test();
+    }
+    
+    // 大文字始まり
+    public static function Test():Void {}
+    
+    // スネークケース
+    public static function test_test():Void {}
 }
 ```
 
@@ -1001,17 +1002,17 @@ import haxe.macro.Context;
 import sys.io.File;
 
 class LicenseWriter {
-	// 初期化マクロとして呼び出す用
-	public static function initialize():Void {
-		Context.onAfterGenerate(write);
-	}
-	
-	private static function write():Void {
-		var fileName = Compiler.getOutput();
-		var comment = "/*This is MIT License.*/\n";
-		
-		File.saveContent(fileName, comment + File.getContent(fileName));
-	}
+    // 初期化マクロとして呼び出す用
+    public static function initialize():Void {
+        Context.onAfterGenerate(write);
+    }
+    
+    private static function write():Void {
+        var fileName = Compiler.getOutput();
+        var comment = "/*This is MIT License.*/\n";
+        
+        File.saveContent(fileName, comment + File.getContent(fileName));
+    }
 }
 ```
 
