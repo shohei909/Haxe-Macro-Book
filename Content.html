@@ -744,7 +744,7 @@ class EmbeddingDate {
 </ul>
 </div>
 <div class="paragraph">
-<p>Haxe公式サイトのCookbookでは、gitのコマンドを呼び出して、Gitのコミットハッシュ値を埋め込む方法も紹介されています。</p>
+<p><a href="http://code.haxe.org/category/macros/">Haxe公式サイトのCookbook</a>では、gitのコマンドを呼び出して、Gitのコミットハッシュ値を埋め込む方法も紹介されています。</p>
 </div>
 <div class="sect3">
 <h4 id="_tips_マクロとnekoパッケージ">3.1.1. Tips: マクロとnekoパッケージ</h4>
@@ -1759,10 +1759,79 @@ class LicenseWriter {
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_おわりに">7. おわりに</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_より深くhaxeを学ぶために">7.1. より深くHaxeを学ぶために</h3>
+<div class="paragraph">
+<p>Haxeマクロをもっと深く学ぶために参考になるものをいくつか紹介していきます。</p>
+</div>
+<div class="paragraph">
+<p>まずマクロについては、Haxeの公式で提供されているものがいくつかあります。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>マニュアル: <a href="http://haxe.org/manual/macro.html" class="bare">http://haxe.org/manual/macro.html</a></p>
+</li>
+<li>
+<p>Cookbook: <a href="http://code.haxe.org/category/macros/" class="bare">http://code.haxe.org/category/macros/</a></p>
+</li>
+<li>
+<p>APIリファレンス: <a href="http://api.haxe.org/haxe/macro/index.html" class="bare">http://api.haxe.org/haxe/macro/index.html</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>(マニュアルの日本語訳: <a href="https://github.com/HaxeLocalizeJP/HaxeManual" class="bare">https://github.com/HaxeLocalizeJP/HaxeManual</a>)</p>
+</div>
+<div class="paragraph">
+<p>最近は公式提供の資料が充実してきましたが、網羅的な解説がされているかというとそうでもありません。例えば、patchTypeの仕様はドキュメント化されていません。</p>
+</div>
+<div class="paragraph">
+<p>より深くマクロについて知りたい場合、Haxeのマクロの標準ライブラリやマクロを使用しているサードパーティのライブラリの、ソースコードを読んだりするのが良いでしょう。</p>
+</div>
+<div class="paragraph">
+<p>マクロを使用しているサードパーティとしては、例えば以下のものがあります。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>hxsl <a href="https://github.com/ncannasse/hxsl" class="bare">https://github.com/ncannasse/hxsl</a></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Haxeで記述したコードをビルドマクロでASTとして読み込んで、コンパイル時にAGAL(Flashのシェーダ言語)のバイトコードへ変換するライブラリ。</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>mcover <a href="https://github.com/massiveinteractive/mcover" class="bare">https://github.com/massiveinteractive/mcover</a></p>
+<div class="ulist">
+<ul>
+<li>
+<p>テストカバレッジの計測ライブラリ。初期化マクロから、各クラスに一括でビルドマクロを適用して、カバレッジ計測用のコードを差し込んでいる。</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_asciidocを使った電子書籍">7.2. asciidocを使った電子書籍</h3>
+<div class="paragraph">
+<p>asciidocを使った電子書籍(PDF)の作成には、 <a href="http://azu.github.io/promises-book/">JavaScript Promiseの本</a>を参考にしました。</p>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-06-23 01:53:48 東京 (標準時)
+Last updated 2016-06-23 23:58:07 東京 (標準時)
 </div>
 </div>
 </body>

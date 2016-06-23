@@ -216,7 +216,7 @@ EmbeddingDate.hx:30: 2016-04-01 00:00:09
  * ``Sys.systemName()`` : OS
  * ``Context.defines()`` : コンパイラフラグ
 
-Haxe公式サイトのCookbookでは、gitのコマンドを呼び出して、Gitのコミットハッシュ値を埋め込む方法も紹介されています。
+http://code.haxe.org/category/macros/[Haxe公式サイトのCookbook]では、gitのコマンドを呼び出して、Gitのコミットハッシュ値を埋め込む方法も紹介されています。
 
 
 ==== Tips: マクロとnekoパッケージ
@@ -1014,3 +1014,32 @@ class LicenseWriter {
 	}
 }
 ```
+
+== おわりに
+
+=== より深くHaxeを学ぶために
+
+Haxeマクロをもっと深く学ぶために参考になるものをいくつか紹介していきます。
+
+まずマクロについては、Haxeの公式で提供されているものがいくつかあります。
+
+* マニュアル: http://haxe.org/manual/macro.html 
+* Cookbook: http://code.haxe.org/category/macros/
+* APIリファレンス: http://api.haxe.org/haxe/macro/index.html
+
+(マニュアルの日本語訳: https://github.com/HaxeLocalizeJP/HaxeManual)
+
+最近は公式提供の資料が充実してきましたが、網羅的な解説がされているかというとそうでもありません。例えば、patchTypeの仕様はドキュメント化されていません。
+
+より深くマクロについて知りたい場合、Haxeのマクロの標準ライブラリやマクロを使用しているサードパーティのライブラリの、ソースコードを読んだりするのが良いでしょう。
+
+マクロを使用しているサードパーティとしては、例えば以下のものがあります。
+
+* hxsl https://github.com/ncannasse/hxsl
+** Haxeで記述したコードをビルドマクロでASTとして読み込んで、コンパイル時にAGAL(Flashのシェーダ言語)のバイトコードへ変換するライブラリ。
+* mcover https://github.com/massiveinteractive/mcover
+** テストカバレッジの計測ライブラリ。初期化マクロから、各クラスに一括でビルドマクロを適用して、カバレッジ計測用のコードを差し込んでいる。
+
+=== asciidocを使った電子書籍
+
+asciidocを使った電子書籍(PDF)の作成には、 http://azu.github.io/promises-book/[JavaScript Promiseの本]を参考にしました。

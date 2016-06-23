@@ -223,7 +223,7 @@ class EmbeddingDate {
 <simpara><literal>Context.defines()</literal> : コンパイラフラグ</simpara>
 </listitem>
 </itemizedlist>
-<simpara>Haxe公式サイトのCookbookでは、gitのコマンドを呼び出して、Gitのコミットハッシュ値を埋め込む方法も紹介されています。</simpara>
+<simpara><link xl:href="http://code.haxe.org/category/macros/">Haxe公式サイトのCookbook</link>では、gitのコマンドを呼び出して、Gitのコミットハッシュ値を埋め込む方法も紹介されています。</simpara>
 <section xml:id="_tips_マクロとnekoパッケージ">
 <title>Tips: マクロとnekoパッケージ</title>
 <simpara>マクロの実行時の標準ライブラリはhaxe.macroパッケージやsysパッケージだけでなくnekoパッケージも利用可能です。</simpara>
@@ -907,6 +907,51 @@ class LicenseWriter {
 		File.saveContent(fileName, comment + File.getContent(fileName));
 	}
 }</programlisting>
+</section>
+</chapter>
+<chapter xml:id="_おわりに">
+<title>おわりに</title>
+<section xml:id="_より深くhaxeを学ぶために">
+<title>より深くHaxeを学ぶために</title>
+<simpara>Haxeマクロをもっと深く学ぶために参考になるものをいくつか紹介していきます。</simpara>
+<simpara>まずマクロについては、Haxeの公式で提供されているものがいくつかあります。</simpara>
+<itemizedlist>
+<listitem>
+<simpara>マニュアル: <link xl:href="http://haxe.org/manual/macro.html">http://haxe.org/manual/macro.html</link></simpara>
+</listitem>
+<listitem>
+<simpara>Cookbook: <link xl:href="http://code.haxe.org/category/macros/">http://code.haxe.org/category/macros/</link></simpara>
+</listitem>
+<listitem>
+<simpara>APIリファレンス: <link xl:href="http://api.haxe.org/haxe/macro/index.html">http://api.haxe.org/haxe/macro/index.html</link></simpara>
+</listitem>
+</itemizedlist>
+<simpara>(マニュアルの日本語訳: <link xl:href="https://github.com/HaxeLocalizeJP/HaxeManual">https://github.com/HaxeLocalizeJP/HaxeManual</link>)</simpara>
+<simpara>最近は公式提供の資料が充実してきましたが、網羅的な解説がされているかというとそうでもありません。例えば、patchTypeの仕様はドキュメント化されていません。</simpara>
+<simpara>より深くマクロについて知りたい場合、Haxeのマクロの標準ライブラリやマクロを使用しているサードパーティのライブラリの、ソースコードを読んだりするのが良いでしょう。</simpara>
+<simpara>マクロを使用しているサードパーティとしては、例えば以下のものがあります。</simpara>
+<itemizedlist>
+<listitem>
+<simpara>hxsl <link xl:href="https://github.com/ncannasse/hxsl">https://github.com/ncannasse/hxsl</link></simpara>
+<itemizedlist>
+<listitem>
+<simpara>Haxeで記述したコードをビルドマクロでASTとして読み込んで、コンパイル時にAGAL(Flashのシェーダ言語)のバイトコードへ変換するライブラリ。</simpara>
+</listitem>
+</itemizedlist>
+</listitem>
+<listitem>
+<simpara>mcover <link xl:href="https://github.com/massiveinteractive/mcover">https://github.com/massiveinteractive/mcover</link></simpara>
+<itemizedlist>
+<listitem>
+<simpara>テストカバレッジの計測ライブラリ。初期化マクロから、各クラスに一括でビルドマクロを適用して、カバレッジ計測用のコードを差し込んでいる。</simpara>
+</listitem>
+</itemizedlist>
+</listitem>
+</itemizedlist>
+</section>
+<section xml:id="_asciidocを使った電子書籍">
+<title>asciidocを使った電子書籍</title>
+<simpara>asciidocを使った電子書籍(PDF)の作成には、 <link xl:href="http://azu.github.io/promises-book/">JavaScript Promiseの本</link>を参考にしました。</simpara>
 </section>
 </chapter>
 </book>
